@@ -1,5 +1,9 @@
 # Screen Recorder for Windows
 
+todo
+
+# Screen Recorder for macOS
+
 ## Get Kap
 
 **[Download the latest release](https://getkap.co/download)** (macOS only)
