@@ -1,5 +1,4 @@
 import {remote, ipcRenderer} from 'electron';
-import {getWindows} from 'mac-windows';
 import {getAppIconListByPid} from 'node-mac-app-icon';
 import nearestNormalAspectRatio from 'nearest-normal-aspect-ratio';
 import Store from 'electron-store';
@@ -44,7 +43,7 @@ const isAppValid = app => {
 };
 
 const getWindowList = async () => {
-  const windows = await getWindows();
+  const windows = []; // Mac版改造成Windows版: await getWindows();
   const images = await getAppIconListByPid(windows.map(win => win.pid), {
     size: 16,
     failOnError: false

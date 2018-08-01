@@ -1,9 +1,11 @@
 import {homedir} from 'os';
-import {app} from 'electron';
 import settings from 'electron-settings';
 import objectPath from 'object-path';
-import aperture from 'aperture';
 import {track} from '../main/analytics';
+/* Deleted imports for not used
+import {app} from 'electron';
+import aperture from 'aperture';
+*/
 
 const DEFAULTS = {
   kapturesDir: `${homedir()}/Movies/Kaptures`,
@@ -38,38 +40,46 @@ const volatiles = {
   }
 };
 
-// We need to sync every setting that can be modified externally
-// e.g. the `openOnStartup` setting can be modified via
-// macOS' System Preferences.app
+/* Deleted for Non-Mac
 const sync = () => {
   settings.setSync('openOnStartup', app.getLoginItemSettings().openAtLogin);
 };
+*/
 
 export const init = async () => {
+  /* Modified for non-existed functions. Replaced by self-defined.
   settings.defaults(DEFAULTS);
   settings.applyDefaultsSync();
-  sync();
+  */
+  for (const key in DEFAULTS) {
+    if (!settings.get(key)) {
+      settings.set(key, DEFAULTS[key]);
+    }
+  }
+  // Deleted for Non-Mac: sync();
 
-  // We need to fetch a input device because if the user opens the app for the first time
-  // and toggle the mic in the main window to record audio, we will not record any audio
-  // if we do not have a input id stored.
-  // TODO: if no input device is available (could happen in an iMac, for example), we need
-  // to tell the user
+  /* Deleted. I don't know whether Windows should get an audioDeviceId. This is a issue to Solve.
   const devices = await aperture.audioDevices();
-
   if (devices.length > 0) {
     settings.setSync('audioInputDeviceId', devices[0].id);
   }
+  */
 };
 
 export const get = key => {
-  sync();
+  // Deleted for Non-Mac: sync();
+  /* Modified for non-existed functions. Replaced by self-defined.
   return objectPath.get(volatiles, key) || settings.getSync(key);
+  */
+  return objectPath.get(volatiles, key) || settings.get(key);
 };
 
 export const getAll = () => {
-  sync();
+  // Deleted for Non-Mac: sync();
+  /* Modified for non-existed functions. Replaced by self-defined.
   return Object.assign({}, volatiles, settings.getSync());
+  */
+  return Object.assign({}, volatiles, settings.getAll());
 };
 
 export const set = (key, value, {volatile = false} = {}) => {
@@ -81,7 +91,13 @@ export const set = (key, value, {volatile = false} = {}) => {
     track(`settings/${key}/toggled/${value}`);
   }
 
+  /* Modified for non-existed functions. Replaced by self-defined.
   settings.setSync(key, value);
+  */
+  settings.set(key, value);
 };
 
+/* Modified for non-existed functions. Replaced by self-defined.
 export const observe = (keyPath, handler) => settings.observe(keyPath, handler);
+*/
+export const observe = (keyPath, handler) => settings.watch(keyPath, handler);

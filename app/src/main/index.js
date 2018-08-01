@@ -3,7 +3,6 @@ import fs from 'fs';
 import {app, BrowserWindow, ipcMain, Menu, screen, globalShortcut, dialog, Notification} from 'electron';
 import isDev from 'electron-is-dev';
 import util from 'electron-util';
-import {activateWindow} from 'mac-windows';
 import {init as initErrorReporter} from '../common/reporter';
 import {init as initLogger} from '../common/logger';
 import * as settings from '../common/settings-manager';
@@ -60,10 +59,11 @@ const discardVideo = () => {
   if (mainWindowIsDetached === true) {
     mainWindow.show();
   } else {
-    app.dock.hide();
+    app.dock.hide(); // Mac专用，windows可以去掉
   }
 };
 
+// 下面三个基于TouchBar操作，Windows下需要删除或改造
 const mainTouchbar = createMainTouchbar({
   onAspectRatioChange: aspectRatio => mainWindow.webContents.send('change-aspect-ratio', aspectRatio),
   onCrop: () => mainWindow.webContents.send('crop')
@@ -120,6 +120,7 @@ const setCropperWindowOnBlur = (closeOnBlur = true) => {
   });
 };
 
+// 下一节更新TouchBar，Windows下需要删除或重构
 const updateRecordingTouchbar = (isRecording, isPreparing = false) => {
   const recordTouchBarInstance = recordTouchBar(isRecording, isPreparing);
   if (cropperWindow) {
@@ -135,7 +136,7 @@ const openCropperWindow = (size = {}, position = {}, options = {}) => {
     closeOnBlur: true
   }, options);
 
-  mainWindow.setAlwaysOnTop(true, 'screen-saver', 1); // TODO send a PR to `menubar`
+  mainWindow.setAlwaysOnTop(true, 'screen-saver', 1); // 后两个参数仅在mac下起作用
   menubar.setOption('alwaysOnTop', true);
 
   if (cropperWindow) {
@@ -238,8 +239,7 @@ ipcMain.on('activate-app', async (event, appName, {width, height, x, y}) => {
   if (cropperWindow) {
     cropperWindow.close();
   }
-
-  await activateWindow(appName);
+  // Deleted for Mac: await activateWindow(appName);
   mainWindow.show();
   openCropperWindow({width, height}, {x, y}, {closeOnBlur: false});
 });
@@ -275,7 +275,7 @@ const resetMainWindowShadow = () => {
 const resetTrayIcon = () => {
   appState = 'initial'; // If the icon is being reseted, we are not recording anymore
   shouldStopWhenTrayIsClicked = false;
-  tray.setImage(path.join(__dirname, '..', '..', 'static', 'menubarDefaultTemplate.png'));
+  tray.setImage(path.join(__dirname, '..', '..', 'static', 'menubarDefaultTemplate.png')); // TODO：换成ICO
   menubar.setOption('alwaysOnTop', false);
   mainWindow.setAlwaysOnTop(false);
 };
@@ -287,7 +287,7 @@ const animateIcon = () => new Promise(resolve => {
   const next = () => {
     setTimeout(() => {
       const number = String(i++).padStart(5, '0');
-      const filename = `loading_${number}Template.png`;
+      const filename = `loading_${number}Template.png`; // TODO: 换成ICO
 
       try {
         tray.setImage(path.join(__dirname, '..', '..', 'static', 'menubar-loading', filename));
@@ -343,13 +343,13 @@ const getCropperWindow = () => {
 };
 
 app.on('ready', () => {
-  util.enforceMacOSAppLocation();
+  util.enforceMacOSAppLocation(); // TODO：移除？
 
   // Ensure all plugins are up to date
   plugins.upgrade().catch(() => {});
 
   if (settings.get('recordKeyboardShortcut')) {
-    globalShortcut.register('Cmd+Shift+5', () => {
+    globalShortcut.register('Cmd+Shift+5', () => { // TODO：换成Windows快捷键
       const recording = (appState === 'recording');
       mainWindow.webContents.send((recording) ? 'stop-recording' : 'prepare-recording');
     });
@@ -414,7 +414,7 @@ menubar.on('after-create-window', () => {
     if (diff.y < 50 && diff.x < 50) {
       if (!wasStuck) {
         mainWindow.webContents.send('stick-to-menubar');
-        app.dock.hide();
+        app.dock.hide(); // TODO：移除
         resetMainWindowShadow();
         wasStuck = true;
         mainWindowIsDetached = false;
@@ -426,7 +426,7 @@ menubar.on('after-create-window', () => {
       positioner.move('trayCenter', tray.getBounds());
     } else if (wasStuck) {
       mainWindow.webContents.send('unstick-from-menubar');
-      app.dock.show();
+      app.dock.show(); // TODO：移除
       setTimeout(() => mainWindow.show(), 250);
       setTimeout(() => resetMainWindowShadow(), 100);
       tray.setHighlightMode('never');
@@ -473,7 +473,7 @@ menubar.on('after-create-window', () => {
     }
   });
 
-  app.on('activate', () => { // == dockIcon.onclick
+  app.on('activate', () => { // == dockIcon.onclick  Mac里的，在Windows里应该用不上
     if (!mainWindow.isVisible() && editorWindow === undefined) {
       mainWindow.show();
     }
@@ -552,7 +552,7 @@ ipcMain.on('hide-window', event => {
 ipcMain.on('close-window', event => {
   const window = BrowserWindow.fromWebContents(event.sender);
   if (window === prefsWindow && !mainWindowIsDetached) {
-    app.dock.hide();
+    app.dock.hide(); // TODO：Mac专用
   }
   window.close();
 });
@@ -640,7 +640,7 @@ ipcMain.on('open-editor-window', (event, opts) => {
   menubar.setOption('hidden', true);
   mainWindow.hide();
   tray.setHighlightMode('never');
-  app.dock.show();
+  app.dock.show(); // TODO：所有dock的地方都是Mac专用
 });
 
 ipcMain.on('close-editor-window', () => {
@@ -692,7 +692,7 @@ const notify = text => {
   (new Notification({
     // The `title` is required for macOS 10.12
     // TODO: Remove when macOS 10.13 is the target
-    title: app.getName(),
+    title: app.getName(), // TODO：Windows下要测试一下
     body: text
   })).show();
 };

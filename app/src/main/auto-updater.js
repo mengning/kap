@@ -5,6 +5,7 @@ import {log} from '../common/logger';
 import {report} from '../common/reporter';
 
 const URL_APP_NAME = app.getName() === 'Kap Beta' ? 'kap-beta' : 'kap';
+// TODO：自动更新地址，需要修改
 const FEED_URL = `https://${URL_APP_NAME}-updates.now.sh/update/macos/${app.getVersion()}`;
 
 const createInterval = () => setInterval(() => {

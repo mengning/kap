@@ -65,10 +65,10 @@ export const applicationMenu = Menu.buildFromTemplate([
       {
         type: 'separator'
       },
-      {
-        label: 'Contribute',
-        click: () => shell.openExternal('https://github.com/wulkano/kap')
-      },
+      // {
+      //   label: 'Contribute',
+      //   click: () => shell.openExternal('https://github.com/wulkano/kap')
+      // },
       {
         type: 'separator'
       },

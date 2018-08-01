@@ -11,7 +11,7 @@ import {handleKeyDown, validateNumericInput} from '../js/input-utils';
 import {handleTrafficLightsClicks, isVisible, disposeObservers} from '../js/utils';
 import buildSizeMenu, {findRatioForSize} from '../js/size-selector';
 
-const aperture = createAperture();
+const aperture = createAperture(); // TODO：所有aperture的地方，需要改造适配
 const {app} = remote;
 
 // Observers that should be disposed when the window unloads
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      await aperture.startRecording(apertureOpts);
+      await aperture.startRecording(apertureOpts); // TODO：开始录制，需要改造
       ipcRenderer.send('did-start-recording');
       log(`Started recording after ${(Date.now() - past) / 1000}s`);
     } catch (err) {
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const stopRecording = async () => {
     ipcRenderer.send('will-stop-recording');
 
-    const filePath = await aperture.stopRecording();
+    const filePath = await aperture.stopRecording(); // TODO：改造
 
     if (app.kap.settings.get('hideDesktopIcons')) {
       desktopIcons.show();
