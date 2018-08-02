@@ -5,7 +5,9 @@ import $j from 'jquery/dist/jquery.slim';
 import {handleTrafficLightsClicks, $, disposeObservers} from '../js/utils';
 
 const {app, dialog, getCurrentWindow} = remote;
+/* Delete for windows platform adjusting
 const aperture = require('aperture');
+*/
 
 const plugins = remote.require('../main/plugins').default;
 const settingsValues = app.kap.settings.getAll();
@@ -51,12 +53,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     highlightClicksCheckbox.checked = settingsValues.highlightClicks;
   }
 
+  /* Delete for windows platform adjusting
   for (const device of await aperture.audioDevices()) {
     const option = document.createElement('option');
     option.value = device.id;
     option.text = device.name;
     audioInputDeviceSelector.add(option);
   }
+  */
 
   audioInputDeviceSelector.value = settingsValues.audioInputDeviceId;
 

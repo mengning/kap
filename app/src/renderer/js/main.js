@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleAudioRecordBtn = document.querySelector('.js-toggle-audio-record');
   const swapBtn = document.querySelector('.swap-btn');
   const trafficLightsWrapper = document.querySelector('.title-bar__controls');
-  const trayTriangle = document.querySelector('.tray-arrow');
   const windowHeader = document.querySelector('.window-header');
 
   const [micOnIcon, micOffIcon] = toggleAudioRecordBtn.children;
@@ -452,28 +451,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const setTrayTriangleVisible = (visible = true) => {
-    trayTriangle.style.borderBottomWidth = visible ? '1rem' : '0';
-    trayTriangle.style.borderBottomColor = 'white';
-
-    const bodyClasses = document.body.classList;
-
-    if (visible) {
-      bodyClasses.remove('is-tray-arrow-hidden');
-    } else {
-      bodyClasses.add('is-tray-arrow-hidden');
-    }
-  };
-
   ipcRenderer.on('unstick-from-menubar', () => {
-    setTrayTriangleVisible(false);
     trafficLightsWrapper.classList.remove('is-invisible');
     windowHeader.classList.remove('is-hidden');
     setMainWindowSize();
   });
 
   ipcRenderer.on('stick-to-menubar', () => {
-    setTrayTriangleVisible();
     trafficLightsWrapper.classList.add('is-invisible');
     windowHeader.classList.add('is-hidden');
     setMainWindowSize();

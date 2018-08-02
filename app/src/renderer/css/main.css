@@ -29,24 +29,9 @@ body {
   }
 }
 
-body.is-tray-arrow-hidden {
-  padding-top: 10px;
-}
-
 /* Helper Classes */
 .horizontal-section {
   display: flex;
-}
-
-/* Tray Arrow */
-.tray-arrow {
-  width: 0;
-  height: 0;
-  border-right: 1rem solid transparent;
-  border-bottom: 1rem solid $background-primary;
-  border-left: 1rem solid transparent;
-  margin: auto;
-  transition: border-bottom-width 0.2s ease, border-bottom-color 0.3s ease;
 }
 
 .content {

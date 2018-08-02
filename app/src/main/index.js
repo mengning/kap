@@ -2,11 +2,9 @@ import path from 'path';
 import fs from 'fs';
 import {app, BrowserWindow, ipcMain, Menu, screen, globalShortcut, dialog, Notification} from 'electron';
 import isDev from 'electron-is-dev';
-import util from 'electron-util';
 import {init as initErrorReporter} from '../common/reporter';
 import {init as initLogger} from '../common/logger';
 import * as settings from '../common/settings-manager';
-import {createMainTouchbar, createRecordTouchbar, createEditorTouchbar} from './touch-bar';
 import {init as initAutoUpdater} from './auto-updater';
 import {init as initAnalytics, track} from './analytics';
 import {applicationMenu, cogMenu} from './menus';
@@ -58,30 +56,8 @@ const discardVideo = () => {
   menubar.setOption('hidden', false);
   if (mainWindowIsDetached === true) {
     mainWindow.show();
-  } else {
-    app.dock.hide(); // Mac专用，windows可以去掉
   }
 };
-
-// 下面三个基于TouchBar操作，Windows下需要删除或改造
-const mainTouchbar = createMainTouchbar({
-  onAspectRatioChange: aspectRatio => mainWindow.webContents.send('change-aspect-ratio', aspectRatio),
-  onCrop: () => mainWindow.webContents.send('crop')
-});
-
-const recordTouchBar = (isRecording, isPreparing = false) => createRecordTouchbar({
-  isRecording,
-  isPreparing,
-  onAspectRatioChange: aspectRatio => mainWindow.webContents.send('change-aspect-ratio', aspectRatio),
-  onRecord: status => mainWindow.webContents.send(status ? 'stop-recording' : 'prepare-recording')
-});
-
-const editorTouchbar = isPlaying => createEditorTouchbar({
-  isPlaying,
-  onDiscard: () => discardVideo(),
-  onSelectPlugin: (pluginName, format) => editorWindow.webContents.send('run-plugin', pluginName, format),
-  onTogglePlay: status => editorWindow.webContents.send('toggle-play', status)
-});
 
 settings.init();
 
@@ -120,17 +96,6 @@ const setCropperWindowOnBlur = (closeOnBlur = true) => {
   });
 };
 
-// 下一节更新TouchBar，Windows下需要删除或重构
-const updateRecordingTouchbar = (isRecording, isPreparing = false) => {
-  const recordTouchBarInstance = recordTouchBar(isRecording, isPreparing);
-  if (cropperWindow) {
-    cropperWindow.setTouchBar(recordTouchBarInstance);
-  }
-  if (mainWindow) {
-    mainWindow.setTouchBar(recordTouchBarInstance);
-  }
-};
-
 const openCropperWindow = (size = {}, position = {}, options = {}) => {
   options = Object.assign({}, {
     closeOnBlur: true
@@ -165,7 +130,6 @@ const openCropperWindow = (size = {}, position = {}, options = {}) => {
     cropperWindow.loadURL(`file://${__dirname}/../renderer/views/cropper.html`);
     cropperWindow.setIgnoreMouseEvents(false); // TODO this should be false by default
     cropperWindow.setAlwaysOnTop(true, 'screen-saver');
-    updateRecordingTouchbar(false, false);
 
     if (isDev) {
       cropperWindow.openDevTools({mode: 'detach'});
@@ -180,7 +144,6 @@ const openCropperWindow = (size = {}, position = {}, options = {}) => {
     cropperWindow.on('closed', () => {
       cropperWindow = undefined;
       mainWindow.webContents.send('cropper-window-closed');
-      mainWindow.setTouchBar(mainTouchbar);
     });
 
     cropperWindow.on('resize', () => {
@@ -239,7 +202,6 @@ ipcMain.on('activate-app', async (event, appName, {width, height, x, y}) => {
   if (cropperWindow) {
     cropperWindow.close();
   }
-  // Deleted for Mac: await activateWindow(appName);
   mainWindow.show();
   openCropperWindow({width, height}, {x, y}, {closeOnBlur: false});
 });
@@ -254,7 +216,6 @@ ipcMain.on('open-cropper-window', (event, size, position) => {
 
 ipcMain.on('close-cropper-window', () => {
   if (cropperWindow && !recording) {
-    mainWindow.setTouchBar(mainTouchbar);
     closeCropperWindow();
   }
 });
@@ -343,13 +304,11 @@ const getCropperWindow = () => {
 };
 
 app.on('ready', () => {
-  util.enforceMacOSAppLocation(); // TODO：移除？
-
   // Ensure all plugins are up to date
   plugins.upgrade().catch(() => {});
 
   if (settings.get('recordKeyboardShortcut')) {
-    globalShortcut.register('Cmd+Shift+5', () => { // TODO：换成Windows快捷键
+    globalShortcut.register('Ctrl+Shift+5', () => { // TODO：换成Windows快捷键
       const recording = (appState === 'recording');
       mainWindow.webContents.send((recording) ? 'stop-recording' : 'prepare-recording');
     });
@@ -368,7 +327,6 @@ menubar.on('after-create-window', () => {
   let expectedWindowPosition;
   const currentWindowPosition = {};
   mainWindow = menubar.window;
-  mainWindow.setTouchBar(mainTouchbar);
 
   app.kap = {mainWindow, getCropperWindow, getEditorWindow, openPrefsWindow, settings, cropperWindowBuffer};
   if (isDev) {
@@ -376,7 +334,7 @@ menubar.on('after-create-window', () => {
   }
 
   const recomputeExpectedWindowPosition = () => {
-    expectedWindowPosition = positioner.calculate('trayCenter', tray.getBounds());
+    expectedWindowPosition = positioner.calculate('trayBottomCenter', tray.getBounds());
   };
 
   const recomputeCurrentWindowPosition = () => {
@@ -387,7 +345,6 @@ menubar.on('after-create-window', () => {
     if (cropperWindow && !cropperWindow.isFocused() && !recording) {
       // Close the cropper window if the main window loses focus and the cropper window
       // is not focused
-      mainWindow.setTouchBar(mainTouchbar);
       closeCropperWindow();
     }
 
@@ -414,7 +371,6 @@ menubar.on('after-create-window', () => {
     if (diff.y < 50 && diff.x < 50) {
       if (!wasStuck) {
         mainWindow.webContents.send('stick-to-menubar');
-        app.dock.hide(); // TODO：移除
         resetMainWindowShadow();
         wasStuck = true;
         mainWindowIsDetached = false;
@@ -423,10 +379,9 @@ menubar.on('after-create-window', () => {
       // because of that, we need to move the window to it's expected position, since the
       // user will never release the mouse in the *right* position (diff.[x, y] === 0)
       tray.setHighlightMode('always');
-      positioner.move('trayCenter', tray.getBounds());
+      positioner.move('trayBottomCenter', tray.getBounds());
     } else if (wasStuck) {
       mainWindow.webContents.send('unstick-from-menubar');
-      app.dock.show(); // TODO：移除
       setTimeout(() => mainWindow.show(), 250);
       setTimeout(() => resetMainWindowShadow(), 100);
       tray.setHighlightMode('never');
@@ -448,12 +403,12 @@ menubar.on('after-create-window', () => {
     }
     if (mainWindowIsNew) {
       mainWindowIsNew = false;
-      positioner.move('trayCenter', tray.getBounds()); // Not sure why the fuck this is needed (ﾉಠдಠ)ﾉ︵┻━┻
+      positioner.move('trayBottomCenter', tray.getBounds()); // Not sure why the fuck this is needed (ﾉಠдಠ)ﾉ︵┻━┻
     }
     if (appState === 'recording' && shouldStopWhenTrayIsClicked) {
       mainWindow.webContents.send('stop-recording');
-    } else if (app.dock.isVisible()) {
-      mainWindow.show();
+    } else {
+      // Deleted for disable window refreshing: mainWindow.show();
     }
   });
 
@@ -473,19 +428,13 @@ menubar.on('after-create-window', () => {
     }
   });
 
-  app.on('activate', () => { // == dockIcon.onclick  Mac里的，在Windows里应该用不上
-    if (!mainWindow.isVisible() && editorWindow === undefined) {
-      mainWindow.show();
-    }
-  });
-
   mainWindow.once('ready-to-show', () => {
     // If Kap was launched at login, don't show the window
     if (wasOpenedAtLogin) {
       return;
     }
 
-    positioner.move('trayCenter', tray.getBounds()); // Not sure why the fuck this is needed (ﾉಠдಠ)ﾉ︵┻━┻
+    positioner.move('trayBottomCenter', tray.getBounds()); // Not sure why the fuck this is needed (ﾉಠдಠ)ﾉ︵┻━┻
     mainWindow.show();
   });
 
@@ -506,7 +455,6 @@ ipcMain.on('start-recording', () => {
 ipcMain.on('will-start-recording', () => {
   recording = true;
   preparingToRecord = true;
-  updateRecordingTouchbar(false, true);
   if (cropperWindow) {
     cropperWindow.setResizable(false);
     cropperWindow.setIgnoreMouseEvents(true);
@@ -526,19 +474,16 @@ ipcMain.on('will-start-recording', () => {
 
 ipcMain.on('did-start-recording', () => {
   preparingToRecord = false;
-  updateRecordingTouchbar(true, false);
 });
 
 ipcMain.on('stopped-recording', () => {
   resetTrayIcon();
   track(`recording/${timeStartedRecording}/finished`);
-  updateRecordingTouchbar(false, false);
 });
 
 ipcMain.on('will-stop-recording', () => {
   recording = false;
   preparingToRecord = false;
-  updateRecordingTouchbar(false, true);
   if (cropperWindow) {
     closeCropperWindow();
   }
@@ -551,9 +496,6 @@ ipcMain.on('hide-window', event => {
 
 ipcMain.on('close-window', event => {
   const window = BrowserWindow.fromWebContents(event.sender);
-  if (window === prefsWindow && !mainWindowIsDetached) {
-    app.dock.hide(); // TODO：Mac专用
-  }
   window.close();
 });
 
@@ -612,7 +554,6 @@ ipcMain.on('open-editor-window', (event, opts) => {
   app.kap.editorWindow = editorWindow;
 
   editorWindow.loadURL(`file://${__dirname}/../renderer/views/editor.html`);
-  editorWindow.setTouchBar(editorTouchbar(playing));
 
   editorWindow.webContents.on('did-finish-load', () => editorWindow.webContents.send('video-src', opts.filePath));
 
@@ -623,7 +564,6 @@ ipcMain.on('open-editor-window', (event, opts) => {
   editorWindow.on('closed', () => {
     editorWindow = undefined;
     app.kap.editorWindow = undefined;
-    mainWindow.setTouchBar(mainTouchbar);
   });
 
   ipcMain.on('toggle-fullscreen-editor-window', () => {
@@ -640,7 +580,6 @@ ipcMain.on('open-editor-window', (event, opts) => {
   menubar.setOption('hidden', true);
   mainWindow.hide();
   tray.setHighlightMode('never');
-  app.dock.show(); // TODO：所有dock的地方都是Mac专用
 });
 
 ipcMain.on('close-editor-window', () => {
@@ -719,6 +658,5 @@ ipcMain.on('uninstall-plugin', async (event, name) => {
 ipcMain.on('toggle-play', (event, status) => {
   if (playing !== status) {
     playing = status;
-    editorWindow.setTouchBar(editorTouchbar(status));
   }
 });
