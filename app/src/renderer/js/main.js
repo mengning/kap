@@ -1,8 +1,6 @@
 import {ipcRenderer, remote} from 'electron';
 import EventEmitter from 'events';
-/* Deleted, waiting for windows adapting
 import {default as createAperture, audioDevices} from 'aperture';
-*/
 import _ from 'lodash';
 import desktopIcons from 'hide-desktop-icons';
 import doNotDisturb from '@sindresorhus/do-not-disturb';
@@ -13,9 +11,7 @@ import {handleKeyDown, validateNumericInput} from '../js/input-utils';
 import {handleTrafficLightsClicks, isVisible, disposeObservers} from '../js/utils';
 import buildSizeMenu, {findRatioForSize} from '../js/size-selector';
 
-/* Deleted, waiting for windows adapting
 const aperture = createAperture();
-*/
 const {app} = remote;
 
 // Observers that should be disposed when the window unloads
@@ -110,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
       cropperBounds.y = 0;
     }
 
-    /* Deleted, waiting for windows adapting
     // We need the most recent settings
     const {
       record60fps,
@@ -138,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
         apertureOpts.audioDeviceId = defaultAudioDevice && defaultAudioDevice.id;
       }
     }
-    */
 
     if (app.kap.settings.get('hideDesktopIcons')) {
       await desktopIcons.hide();
@@ -153,9 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      /* Deleted, waiting for windows adapting
       await aperture.startRecording(apertureOpts);
-      */
       ipcRenderer.send('did-start-recording');
       log(`Started recording after ${(Date.now() - past) / 1000}s`);
     } catch (err) {
@@ -175,9 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const stopRecording = async () => {
     ipcRenderer.send('will-stop-recording');
 
-    /* Deleted, waiting for windows adapting
     const filePath = await aperture.stopRecording();
-    */
 
     if (app.kap.settings.get('hideDesktopIcons')) {
       desktopIcons.show();
@@ -188,9 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     ipcRenderer.send('stopped-recording');
-    /* Deleted, waiting for windows adapting
     ipcRenderer.send('open-editor-window', {filePath});
-    */
     setMainWindowSize();
   };
 

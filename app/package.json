@@ -17,7 +17,7 @@
     "@ffmpeg-installer/ffmpeg": "^1.0.15",
     "@sindresorhus/do-not-disturb": "^0.2.0",
     "ajv": "^6.2.0",
-    "aperture": "^4.0.0",
+    "aperture": "github:mengning/aperture",
     "aspectratio": "^2.2.2",
     "delay": "^2.0.0",
     "eightpoint": "0.0.1",
