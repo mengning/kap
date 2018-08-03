@@ -16,7 +16,7 @@ const {wasOpenedAtLogin} = app.getLoginItemSettings();
 
 const menubar = require('menubar')({
   index: `file://${__dirname}/../renderer/views/main.html`,
-  icon: path.join(__dirname, '..', '..', 'static', 'menubarDefaultTemplate.png'),
+  icon: path.join(__dirname, '..', '..', 'static', 'kap.ico'),
   width: 320,
   height: 500,
   preloadWindow: true,
@@ -236,7 +236,7 @@ const resetMainWindowShadow = () => {
 const resetTrayIcon = () => {
   appState = 'initial'; // If the icon is being reseted, we are not recording anymore
   shouldStopWhenTrayIsClicked = false;
-  tray.setImage(path.join(__dirname, '..', '..', 'static', 'menubarDefaultTemplate.png')); // TODO：换成ICO
+  tray.setImage(path.join(__dirname, '..', '..', 'static', 'kap.ico'));
   menubar.setOption('alwaysOnTop', false);
   mainWindow.setAlwaysOnTop(false);
 };
