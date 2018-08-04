@@ -118,7 +118,8 @@
   },
   "dependencies": {
     "clean-stack": "^1.3.0",
-    "execa": "^0.10.0",
-    "file-exists": "^5.0.1"
+    "file-exists": "^5.0.1",
+    "execa": "github:mengning/execa",
+    "socks": "^2.2.1"
   }
 }

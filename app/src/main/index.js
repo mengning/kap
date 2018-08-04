@@ -479,6 +479,7 @@ ipcMain.on('did-start-recording', () => {
 ipcMain.on('stopped-recording', () => {
   resetTrayIcon();
   track(`recording/${timeStartedRecording}/finished`);
+  console.log(`recording/${timeStartedRecording}/finished`);
 });
 
 ipcMain.on('will-stop-recording', () => {
@@ -533,6 +534,7 @@ ipcMain.on('move-cropper-window', (event, data) => {
 });
 
 ipcMain.on('open-editor-window', (event, opts) => {
+  console.log('open edit window...');
   track('editor/preview/accessed');
 
   if (editorWindow) {
@@ -552,10 +554,16 @@ ipcMain.on('open-editor-window', (event, opts) => {
   });
 
   app.kap.editorWindow = editorWindow;
+  if (isDev) {
+    editorWindow.openDevTools({mode: 'detach'});
+  }
 
   editorWindow.loadURL(`file://${__dirname}/../renderer/views/editor.html`);
 
-  editorWindow.webContents.on('did-finish-load', () => editorWindow.webContents.send('video-src', opts.filePath));
+  editorWindow.webContents.on('did-finish-load', () => {
+    console.log('set video-src: ', opts);
+    editorWindow.webContents.send('video-src', opts.filePath);
+  });
 
   editorWindow.kap = {
     videoFilePath: opts.filePath
@@ -577,12 +585,15 @@ ipcMain.on('open-editor-window', (event, opts) => {
     }
   });
 
+  editorWindow.reload(); // Anyone can tell me why i have to add this fucking line?
+
   menubar.setOption('hidden', true);
   mainWindow.hide();
   tray.setHighlightMode('never');
 });
 
 ipcMain.on('close-editor-window', () => {
+  console.log('close edit window...');
   if (!editorWindow) {
     return;
   }

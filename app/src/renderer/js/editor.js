@@ -7,7 +7,7 @@ import {handleTrafficLightsClicks, $, handleActiveButtonGroup, getTimestampAtEve
 import {init as initErrorReporter} from '../../common/reporter';
 
 const {app} = remote;
-const {getShareServices} = remote.require('./plugins').default;
+const plugins = remote.require('../main/plugins').default;
 const TRIMMER_STEP = 0.00001;
 
 initErrorReporter();
@@ -278,10 +278,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const shareServices = getShareServices();
-  console.log('Share services', shareServices);
+  const shareServices = plugins.getShareServices();
 
   const handleFile = (service, format) => {
+    console.log(service);
+    console.log(format);
     service.run({
       format,
       filePath: preview.src,

@@ -9,6 +9,7 @@
       "request": "launch",
       "name": "Debug Electron",
       "cwd": "${workspaceFolder}",
+      "protocol": "inspector",
       "runtimeExecutable": "${workspaceFolder}\\node_modules\\.bin\\electron",
       "windows": {
         "runtimeExecutable": "${workspaceFolder}\\node_modules\\.bin\\electron.cmd",

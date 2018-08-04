@@ -135,7 +135,6 @@ class Plugins {
         }
       }
     }
-
     return ret;
   }
 
