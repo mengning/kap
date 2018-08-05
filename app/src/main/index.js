@@ -546,7 +546,7 @@ ipcMain.on('open-editor-window', (event, opts) => {
     minWidth: 768,
     height: 480,
     minHeight: 480,
-    frame: false,
+    frame: true,
     vibrancy: 'ultra-dark',
     // The below is: `rgba(0, 0, 0, 0.8)`
     // Convert tool: https://kilianvalkhof.com/2016/css-html/css-hexadecimal-colors-with-transparency-a-conversion-tool/
