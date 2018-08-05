@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.send('will-stop-recording');
 
     const filePath = await aperture.stopRecording();
-
+    console.log('stopRecordin -- ', filePath);
     if (app.kap.settings.get('hideDesktopIcons')) {
       desktopIcons.show();
     }

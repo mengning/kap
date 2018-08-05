@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const maxFps = app.kap.settings.get('record60fps') ? 60 : 30;
   let fps = 15;
+  let tmpPath;
 
   let lastValidInputWidth;
   let lastValidInputHeight;
@@ -282,10 +283,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const handleFile = (service, format) => {
     console.log(service);
-    console.log(format);
+    console.log(preview.src, tmpPath);
     service.run({
       format,
-      filePath: preview.src,
+      filePath: tmpPath,
       width: inputWidth.value,
       height: inputHeight.value,
       fps,
@@ -359,6 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   ipcRenderer.on('video-src', (event, src) => {
     preview.src = src;
+    tmpPath = src;
   });
 
   ipcRenderer.on('toggle-play', (event, status) => {

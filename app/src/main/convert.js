@@ -24,7 +24,7 @@ export default async exportOptions => {
   }
 
   const outputPath = path.join(tempy.directory(), exportOptions.defaultFileName);
-
+  console.log(outputPath, exportOptions, tempy.directory());
   const convertProcess = convert({
     filePath: exportOptions.filePath, // TODO: Rename `filePath` to `inputPath`
     outputPath,
