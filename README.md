@@ -1,6 +1,12 @@
 # Screen Recorder for Windows
 
-todo
+```
+$ git clone https://github.com/mengning/kap.git
+$ npm install
+$ npm run build
+$ npm run start # kap works well
+$ npm run pack # kap.exe have error for now
+```
 
 # Screen Recorder for macOS
 
